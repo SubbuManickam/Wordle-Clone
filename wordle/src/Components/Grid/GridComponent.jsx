@@ -3,70 +3,70 @@ import GameRow from './GameRow';
 import { validateWord } from './Logic';
 
 const GridComponent = (props) => {
-	const {
-		input = [],
-		callback,
-		gameOver
-	} = props;
+    const {
+        input = [],
+        callback,
+        gameOver
+    } = props;
 
-	const [pointer, setPointer] = useState({
-		"col": 0,
-		"row": 0
-	});
-	const [rowObjArr, setRowObjArr] = useState([]);
-	const [activeRow, setActiveRow] = useState(0);
-	const [message, setMessage] = useState("");
-	const msgArr = ["Exceptional", "Outstanding", "Amazing", "Great", "Very Good", "That was close", "Better luck next time"]
+    const [pointer, setPointer] = useState({
+        "col": 0,
+        "row": 0
+    });
+    const [rowObjArr, setRowObjArr] = useState([]);
+    const [activeRow, setActiveRow] = useState(0);
+    const [message, setMessage] = useState("");
+    const msgArr = ["Exceptional", "Outstanding", "Amazing", "Great", "Very Good", "That was close", "Better luck next time"]
     const [typeWord, setTypeWord] = useState("");
     const [lost, setLost] = useState(false);
 
-const handleKeyboard = (e) => {
-    let rowObj = rowObjArr[activeRow];
-    let arr = []
+    const handleKeyboard = (e) => {
+        let rowObj = rowObjArr[activeRow];
+        let arr = []
 
-    if (e.key === "Enter") {
-        e.preventDefault();
-        onEnter(rowObj, arr);
-    } 
-    else if (e.key === "Backspace") {
-        onDelete(rowObj, arr);
-    }
-    else {
-        let key = e.key.toUpperCase();
-        if (key.length === 1 && key >= 'A' && key <= 'Z') {
-            if (pointer.col < 5) {
-                let rowWord = ""
-                if (message === "Word not in List") {
-                    setMessage("");
-                }
-                
-                if (rowObj === undefined) {
-                    let obj = {
-                        "rowWord": "",
-                        "letterStateArr": ["default", "default", "default", "default", "default"]
+        if (e.key === "Enter") {
+            e.preventDefault();
+            onEnter(rowObj, arr);
+        }
+        else if (e.key === "Backspace") {
+            onDelete(rowObj, arr);
+        }
+        else {
+            let key = e.key.toUpperCase();
+            if (key.length === 1 && key >= 'A' && key <= 'Z') {
+                if (pointer.col < 5) {
+                    let rowWord = ""
+                    if (message === "Word not in List") {
+                        setMessage("");
                     }
-                    arr = rowObjArr;
-                    rowWord = key;
-                    obj.rowWord = rowWord;
-                    arr.push(obj)
-                    setRowObjArr(arr);
+
+                    if (rowObj === undefined) {
+                        let obj = {
+                            "rowWord": "",
+                            "letterStateArr": ["default", "default", "default", "default", "default"]
+                        }
+                        arr = rowObjArr;
+                        rowWord = key;
+                        obj.rowWord = rowWord;
+                        arr.push(obj)
+                        setRowObjArr(arr);
+                    }
+                    else {
+                        arr = rowObjArr;
+                        rowObj.rowWord = rowObj.rowWord + key;
+                        arr[activeRow] = rowObj;
+                        setRowObjArr(arr);
+                    }
                 }
-                else {
-                    arr = rowObjArr;
-                    rowObj.rowWord = rowObj.rowWord + key;
-                    arr[activeRow] = rowObj;
-                    setRowObjArr(arr);
+
+                let pObj = {
+                    "col": pointer.col <= 4 ? pointer.col + 1 : pointer.col,
+                    "row": pointer.row
                 }
+                setPointer(pObj);
             }
-        
-            let pObj = {
-                "col": pointer.col <= 4 ? pointer.col + 1 : pointer.col,
-                "row": pointer.row
-            }
-            setPointer(pObj);
         }
     }
-}
     const onKeys = (lastIndex, rowObj, arr) => {
         if (pointer.col < 5) {
             let rowWord = ""
@@ -118,45 +118,49 @@ const handleKeyboard = (e) => {
     }
 
     const onEnter = (rowObj, arr) => {
-        let respObj = validateWord(rowObj.rowWord);
-        if (respObj.type === "correct") {
-            callback();
-        } else if (respObj.type === "unacceptable") {
-            setMessage("Word not in List");
-        }
-        arr = rowObjArr;
-        rowObj.letterStateArr = respObj.letterStateArr;
-        arr[activeRow] = rowObj;
-        setRowObjArr(arr);
-
-        if (respObj.isValid) {
-            let pObj = {
-                "col": 0,
-                "row": pointer.row + 1
+        if (rowObj) {
+            let respObj = validateWord(rowObj.rowWord);
+            if (respObj.type === "correct") {
+                callback();
+            } else if (respObj.type === "unacceptable") {
+                setMessage("Word not in List");
             }
-            setPointer(pObj);
-            setActiveRow(activeRow => activeRow + 1);
-            setTypeWord(respObj.type);
+            arr = rowObjArr;
+            rowObj.letterStateArr = respObj.letterStateArr;
+            arr[activeRow] = rowObj;
+            setRowObjArr(arr);
+
+            if (respObj.isValid) {
+                let pObj = {
+                    "col": 0,
+                    "row": pointer.row + 1
+                }
+                setPointer(pObj);
+                setActiveRow(activeRow => activeRow + 1);
+                setTypeWord(respObj.type);
+            }
+        } else {
+            setMessage("Enter a Word");
         }
     }
 
     useEffect(() => {
-		let lastIndex = input.length - 1;
-		let rowObj = rowObjArr[activeRow];
-		let arr = []
+        let lastIndex = input.length - 1;
+        let rowObj = rowObjArr[activeRow];
+        let arr = []
 
-		if (input.length > 0 && !gameOver) {
-			if (input[lastIndex] !== "goback" && input[lastIndex] !== "submit") {
+        if (input.length > 0 && !gameOver) {
+            if (input[lastIndex] !== "goback" && input[lastIndex] !== "submit") {
                 onKeys(lastIndex, rowObj, arr);
-			}
-			else if (input[lastIndex] === "goback") {
+            }
+            else if (input[lastIndex] === "goback") {
                 onDelete(rowObj, arr);
-			}
-			else if (input[lastIndex] === "submit") {
-				onEnter(rowObj, arr);
-			}
-		}
-	}, [input])
+            }
+            else if (input[lastIndex] === "submit") {
+                onEnter(rowObj, arr);
+            }
+        }
+    }, [input])
 
     const displayGrid = () => {
         let html = [];
@@ -168,19 +172,19 @@ const handleKeyboard = (e) => {
         return html;
     }
 
-	const showMessage = () => {
-		return (
-			<div className="message-block">
-				{message}
-			</div>
-		)
-	}
+    const showMessage = () => {
+        return (
+            <div className="message-block">
+                {message}
+            </div>
+        )
+    }
 
     useEffect(() => {
         if (gameOver) return;
         document.addEventListener("keydown", handleKeyboard)
         return () => document.removeEventListener("keydown", handleKeyboard)
-    },[handleKeyboard]);
+    }, [handleKeyboard]);
 
     useEffect(() => {
         if (activeRow === 6 && typeWord === "incorrect") {
@@ -192,28 +196,28 @@ const handleKeyboard = (e) => {
         }
     }, [activeRow]);
 
-useEffect(() => {
-    if (gameOver === true && lost  === true){
-        setMessage("Better luck next time");
-    }
-    else if (gameOver) {
-        setMessage(msgArr[activeRow-1]);
-    }
-}, [gameOver]);
+    useEffect(() => {
+        if (gameOver === true && lost === true) {
+            setMessage("Better luck next time");
+        }
+        else if (gameOver) {
+            setMessage(msgArr[activeRow - 1]);
+        }
+    }, [gameOver]);
 
-	return (
-		<div className='gridbody-wrapper'>
-			{
-				message.length > 0 ?
-					showMessage() : ""
-			}
-			<div className='board'>
-				{
-					displayGrid()
-				}
-			</div>
-		</div>
-	)
+    return (
+        <div className='gridbody-wrapper'>
+            {
+                message.length > 0 ?
+                    showMessage() : ""
+            }
+            <div className='board'>
+                {
+                    displayGrid()
+                }
+            </div>
+        </div>
+    )
 }
 
 export default GridComponent
